@@ -1,6 +1,6 @@
 import os
 import sys
-
+from PIL import Image
 # Add the root directory of the project to the system path to allow importing modules from the project
 root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if root_dir not in sys.path:
@@ -12,23 +12,20 @@ if root_dir not in sys.path:
 import os
 import platform
 from uuid import uuid4
+import os
 
+# Thiết lập ngôn ngữ mặc định là tiếng Việt
+os.environ["LANG"] = "vi-VN"
 import streamlit as st
 from loguru import logger
 
 st.set_page_config(
-    page_title="MoneyPrinterTurbo",
-    page_icon="🤖",
+    page_title="CLOUDGO - TẠO VIDEO TỰ ĐỘNG",
+    page_icon="C:\\Users\\Hi\\MoneyPrinterTurbo\\webui\\Logo_Cloudgo.png",
     layout="wide",
     initial_sidebar_state="auto",
-    menu_items={
-        "Report a bug": "https://github.com/harry0703/MoneyPrinterTurbo/issues",
-        "About": "# MoneyPrinterTurbo\nSimply provide a topic or keyword for a video, and it will "
-        "automatically generate the video copy, video materials, video subtitles, "
-        "and video background music before synthesizing a high-definition short "
-        "video.\n\nhttps://github.com/harry0703/MoneyPrinterTurbo",
-    },
 )
+
 
 from app.config import config
 from app.models.const import FILE_TYPE_IMAGES, FILE_TYPE_VIDEOS
@@ -41,8 +38,16 @@ hide_streamlit_style = """
 <style>#root > div:nth-child(1) > div > div > div > div > section > div {padding-top: 0rem;}</style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-st.title(f"MoneyPrinterTurbo v{config.project_version}")
+#st.title(f"CLOUDGO")
+# Hiển thị hình ảnh thay cho tiêu đề
+logo_path = "webui/cloudgo-logo-4053.png"  # Đường dẫn đến hình ảnh
 
+if os.path.exists(logo_path):
+    image = Image.open(logo_path)
+    st.image(image)
+
+else:
+    st.write("File hình ảnh không tồn tại tại đường dẫn đã chỉ định.")
 support_locales = [
     "zh-CN",
     "zh-HK",
@@ -125,14 +130,9 @@ def init_log():
     _lvl = "DEBUG"
 
     def format_record(record):
-        # 获取日志记录中的文件全路径
         file_path = record["file"].path
-        # 将绝对路径转换为相对于项目根目录的路径
         relative_path = os.path.relpath(file_path, root_dir)
-        # 更新记录中的文件路径
         record["file"].path = f"./{relative_path}"
-        # 返回修改后的格式字符串
-        # 您可以根据需要调整这里的格式
         record["message"] = record["message"].replace(root_dir, ".")
 
         _format = (
@@ -195,14 +195,6 @@ if not config.app.get("hide_config", False):
             config.ui["hide_log"] = hide_log
 
         with middle_config_panel:
-            #   openai
-            #   moonshot (月之暗面)
-            #   oneapi
-            #   g4f
-            #   azure
-            #   qwen (通义千问)
-            #   gemini
-            #   ollama
             llm_providers = [
                 "OpenAI",
                 "Moonshot",
@@ -414,12 +406,6 @@ if not config.app.get("hide_config", False):
                 if value:
                     config.app[cfg_key] = value.split(",")
 
-            pexels_api_key = get_keys_from_config("pexels_api_keys")
-            pexels_api_key = st.text_input(
-                tr("Pexels API Key"), value=pexels_api_key, type="password"
-            )
-            save_keys_to_config("pexels_api_keys", pexels_api_key)
-
             pixabay_api_key = get_keys_from_config("pixabay_api_keys")
             pixabay_api_key = st.text_input(
                 tr("Pixabay API Key"), value=pixabay_api_key, type="password"
@@ -490,7 +476,6 @@ with middle_panel:
             (tr("Random"), "random"),
         ]
         video_sources = [
-            (tr("Pexels"), "pexels"),
             (tr("Pixabay"), "pixabay"),
             (tr("Local file"), "local"),
             (tr("TikTok"), "douyin"),
@@ -498,7 +483,7 @@ with middle_panel:
             (tr("Xiaohongshu"), "xiaohongshu"),
         ]
 
-        saved_video_source_name = config.app.get("video_source", "pexels")
+        saved_video_source_name = config.app.get("video_source", "pixabay")
         saved_video_source_index = [v[1] for v in video_sources].index(
             saved_video_source_name
         )
@@ -725,7 +710,7 @@ with right_panel:
         with stroke_cols[1]:
             params.stroke_width = st.slider(tr("Stroke Width"), 0.0, 10.0, 1.5)
 
-start_button = st.button(tr("Generate Video"), use_container_width=True, type="primary")
+start_button = st.button(tr("Tạo Video"), use_container_width=True, type="primary")
 if start_button:
     config.save_config()
     task_id = str(uuid4())
@@ -739,15 +724,11 @@ if start_button:
         scroll_to_bottom()
         st.stop()
 
-    if params.video_source not in ["pexels", "pixabay", "local"]:
+    if params.video_source not in [ "pixabay", "local"]:
         st.error(tr("Please Select a Valid Video Source"))
         scroll_to_bottom()
         st.stop()
 
-    if params.video_source == "pexels" and not config.app.get("pexels_api_keys", ""):
-        st.error(tr("Please Enter the Pexels API Key"))
-        scroll_to_bottom()
-        st.stop()
 
     if params.video_source == "pixabay" and not config.app.get("pixabay_api_keys", ""):
         st.error(tr("Please Enter the Pixabay API Key"))
