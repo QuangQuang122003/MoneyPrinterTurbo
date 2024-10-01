@@ -482,12 +482,12 @@ with middle_panel:
             (tr("Bilibili"), "bilibili"),
             (tr("Xiaohongshu"), "xiaohongshu"),
         ]
-
         saved_video_source_name = config.app.get("video_source", "pixabay")
-        saved_video_source_index = [v[1] for v in video_sources].index(
-            saved_video_source_name
-        )
 
+        # Kiểm tra nếu saved_video_source_name có trong video_sources
+        if saved_video_source_name not in [v[1] for v in video_sources]:
+            saved_video_source_name = "pixabay"  # Đặt giá trị mặc định nếu không tìm thấy
+        saved_video_source_index = [v[1] for v in video_sources].index(saved_video_source_name)
         selected_index = st.selectbox(
             tr("Video Source"),
             options=range(len(video_sources)),
@@ -496,7 +496,7 @@ with middle_panel:
         )
         params.video_source = video_sources[selected_index][1]
         config.app["video_source"] = params.video_source
-
+    
         if params.video_source == "local":
             _supported_types = FILE_TYPE_VIDEOS + FILE_TYPE_IMAGES
             uploaded_files = st.file_uploader(
